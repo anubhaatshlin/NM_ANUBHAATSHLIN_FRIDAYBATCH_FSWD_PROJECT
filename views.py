@@ -1,83 +1,71 @@
-from django.shortcuts import render, get_object_or_404
-from .models import Car
-from django.core.paginator import EmptyPage, PageNotAnInteger, Paginator
+from django.shortcuts import render, redirect
+from django.contrib import messages, auth
+from django.contrib.auth.models import User
+from contacts.models import Contact
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
-def cars(request):
-    cars = Car.objects.order_by('-created_date')
-    paginator = Paginator(cars, 4)
-    page = request.GET.get('page')
-    paged_cars = paginator.get_page(page)
 
-    model_search = Car.objects.values_list('model', flat=True).distinct()
-    city_search = Car.objects.values_list('city', flat=True).distinct()
-    year_search = Car.objects.values_list('year', flat=True).distinct()
-    body_style_search = Car.objects.values_list('body_style', flat=True).distinct()
+def login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
 
-    data = {
-        'cars': paged_cars,
-        'model_search': model_search,
-        'city_search': city_search,
-        'year_search': year_search,
-        'body_style_search': body_style_search,
-    }
-    return render(request, 'cars/cars.html', data)
+        user = auth.authenticate(username=username, password=password)
 
-def car_detail(request, id):
-    single_car = get_object_or_404(Car, pk=id)
+        if user is not None:
+            auth.login(request, user)
+            messages.success(request, 'You are now logged in.')
+            return redirect('dashboard')
+        else:
+            messages.error(request, 'Invalid login credentials')
+            return redirect('login')
+    return render(request, 'accounts/login.html')
 
-    data = {
-        'single_car': single_car,
-    }
-    return render(request, 'cars/car_detail.html', data)
+def register(request):
+    if request.method == 'POST':
+        firstname = request.POST['firstname']
+        lastname = request.POST['lastname']
+        username = request.POST['username']
+        email = request.POST['email']
+        password = request.POST['password']
+        confirm_password = request.POST['confirm_password']
+
+        if password == confirm_password:
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'Username already exists!')
+                return redirect('register')
+            else:
+                if User.objects.filter(email=email).exists():
+                    messages.error(request, 'Email already exists!')
+                    return redirect('register')
+                else:
+                    user = User.objects.create_user(first_name=firstname, last_name=lastname, email=email, username=username, password=password)
+                    auth.login(request, user)
+                    messages.success(request, 'You are now logged in.')
+                    return redirect('dashboard')
+                    user.save()
+                    messages.success(request, 'You are registered successfully.')
+                    return redirect('login')
+        else:
+            messages.error(request, 'Password do not match')
+            return redirect('register')
+    else:
+        return render(request, 'accounts/register.html')
 
 
-def search(request):
-    cars = Car.objects.order_by('-created_date')
-
-    model_search = Car.objects.values_list('model', flat=True).distinct()
-    city_search = Car.objects.values_list('city', flat=True).distinct()
-    year_search = Car.objects.values_list('year', flat=True).distinct()
-    body_style_search = Car.objects.values_list('body_style', flat=True).distinct()
-    transmission_search = Car.objects.values_list('transmission', flat=True).distinct()
-
-    if 'keyword' in request.GET:
-        keyword = request.GET['keyword']
-        if keyword:
-            cars = cars.filter(description__icontains=keyword)
-
-    if 'model' in request.GET:
-        model = request.GET['model']
-        if model:
-            cars = cars.filter(model__iexact=model)
-
-    if 'city' in request.GET:
-        city = request.GET['city']
-        if city:
-            cars = cars.filter(city__iexact=city)
-
-    if 'year' in request.GET:
-        year = request.GET['year']
-        if year:
-            cars = cars.filter(year__iexact=year)
-
-    if 'body_style' in request.GET:
-        body_style = request.GET['body_style']
-        if body_style:
-            cars = cars.filter(body_style__iexact=body_style)
-
-    if 'min_price' in request.GET:
-        min_price = request.GET['min_price']
-        max_price = request.GET['max_price']
-        if max_price:
-            cars = cars.filter(price__gte=min_price, price__lte=max_price)
+@login_required(login_url = 'login')
+def dashboard(request):
+    user_inquiry = Contact.objects.order_by('-create_date').filter(user_id=request.user.id)
+    # count = Contact.objects.order_by('-create_date').filter(user_id=request.user.id).count()
 
     data = {
-        'cars': cars,
-        'model_search': model_search,
-        'city_search': city_search,
-        'year_search': year_search,
-        'body_style_search': body_style_search,
-        'transmission_search': transmission_search,
+        'inquiries': user_inquiry,
     }
-    return render(request, 'cars/search.html', data)
+    return render(request, 'accounts/dashboard.html', data)
+
+def logout(request):
+    if request.method == 'POST':
+        auth.logout(request)
+        return redirect('home')
+    return redirect('home')
