@@ -1,15 +1,22 @@
-# NM_ANUBHAATSHLIN_FRIDAYBATCH_FSWD_PROJECT
-
-Name: ANUBHA ATSHLIN J R
+# NM_FRIDAYBATCH_FSWD_PROJECT
 
 
-ID: au960221104022
+Project implemented by: 
 
 
-College Name: Arunachala College of Engineering for Women
+Name:
 
 
-Username:admin_22
+ID:
 
 
-Password:admin_22
+College name:
+
+
+Login credentials: 
+
+username: root
+
+
+Password: root
+
