@@ -1,22 +1,22 @@
 # NM_FRIDAYBATCH_FSWD_PROJECT
-
+Car Rental Application with Django Framework
 
 Project implemented by: 
 
 
-Name:
+Name:Anubha Atshlin J R
 
 
-ID:
+ID:au960221104022
 
 
-College name:
+College name:Arunachala College of Engineering for Women
 
 
 Login credentials: 
 
-username: root
+username: admin_22
 
 
-Password: root
+Password: admin_22
 
